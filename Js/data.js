@@ -6,52 +6,8 @@
      - w, h: 사진의 가로·세로 픽셀 (비율 계산용. 터미널에서 sips -g pixelWidth -g pixelHeight 파일명)
      - type / material: 아래 TYPES / MATERIALS 의 key 중 하나
      - place, date, note: 모르면 "" 로 두면 화면에서 숨겨진다
-     - title: 화면에는 보이지 않고, 사진 설명(alt text)으로 쓰인다
-  3. 썸네일(작은 사진)을 만들어 image/thumbs/ 에 같은 이름의 .jpg 로 넣는다
-     sips -Z 640 -s format jpeg -s formatOptions 70% image/파일.webp --out image/thumbs/파일.jpg
-     썸네일이 없으면 원본이 대신 쓰인다
   title 과 분류는 사진을 보고 붙인 초안이다. 자유롭게 고쳐서 쓰면 된다.
 */
-
-const PROJECT = {
-  title: "Imperfect Repairs",
-  subtitle: "Study of Urban Mending: Beauty & Vulnerability",
-  designer: "Jeewon Pahng"
-};
-
-/*
-  Research 섹션: 책의 구성을 따른다.
-  text 는 책 원문을 그대로 넣는 자리다. 비어 있으면 "Text forthcoming" 으로 표시된다.
-  images 에는 REPAIRS 의 id 를 넣는다.
-*/
-const RESEARCH = [
-  {
-    no: "01",
-    title: "The Imperfect Repairs",
-    text: [
-      "Cracked asphalt, mismatched pavement, patched concrete, repainted road markings, weathered surfaces, and improvised interventions found throughout everyday city environments."
-    ],
-    images: ["IR-04", "IR-07", "IR-06"]
-  },
-  {
-    no: "02",
-    title: "The Causes",
-    text: [],
-    images: []
-  },
-  {
-    no: "03",
-    title: "The Dual Gaze",
-    text: [
-      "Urban imperfections, read through two contrasting perspectives."
-    ],
-    images: [],
-    gazes: [
-      { title: "Beauty",        text: ["The unexpected visual beauty of repaired, damaged, and weathered urban surfaces."],          images: [] },
-      { title: "Vulnerability", text: ["The structural fragility, neglect, and physical deterioration that these imperfections may represent."], images: [] }
-    ]
-  }
-];
 
 const TYPES = [
   { key: "crack",  label: "Crack" },

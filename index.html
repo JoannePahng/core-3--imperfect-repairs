@@ -3,110 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imperfect Repairs</title>
-  <meta name="description" content="Imperfect Repairs — Study of Urban Mending: Beauty & Vulnerability. A photographic archive by Jeewon Pahng.">
+  <title>Imperfect Repairs — Archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Minion Pro: Adobe Fonts 웹 프로젝트를 만들면 받는 링크를 여기에 붙여넣으면 된다
        예) <link rel="stylesheet" href="https://use.typekit.net/xxxxxxx.css">
        없으면 Crimson Pro 가 대신 보인다 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;1,6..96,400&family=Crimson+Pro:ital,wght@0,400;0,500;1,400&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="skip" href="#main">Skip to content</a>
+  <a class="skip" href="#stage">Skip to archive</a>
 
-  <header class="masthead grid">
-    <a class="title" href="#" data-route="">Imperfect Repairs</a>
-    <p class="subtitle">Study of Urban Mending:<br>Beauty &amp; Vulnerability</p>
-    <nav class="menu" aria-label="Main">
-      <a href="#index" data-route="index">Index</a>
-      <a href="#research" data-route="research">Research</a>
-      <a href="#about" data-route="about">About</a>
-      <button class="filter-toggle" id="filter-toggle" aria-expanded="false" aria-controls="filters">Filter</button>
-    </nav>
+  <header class="top">
+    <div class="top-row">
+      <h1>Imperfect Repairs</h1>
+      <span class="crumb">Photographic archive of urban repairs</span>
+    </div>
 
-    <div class="filters" id="filters" hidden>
-      <div class="facet" role="group" aria-label="Type">
-        <span class="facet-label">Type</span>
-        <span class="facet-opts" id="f-type"></span>
+    <div class="toolbar">
+      <div class="group" id="f-type" role="group" aria-label="Type filter">
+        <span class="lbl">Type</span>
       </div>
-      <div class="facet" role="group" aria-label="Material">
-        <span class="facet-label">Material</span>
-        <span class="facet-opts" id="f-material"></span>
+      <div class="group" id="f-material" role="group" aria-label="Material filter">
+        <span class="lbl">Material</span>
       </div>
-      <span class="filter-count" id="filter-count" aria-live="polite"></span>
+      <div class="group" role="group" aria-label="Arrange">
+        <span class="lbl">View</span>
+        <button class="opt" data-arrange="type" aria-pressed="true">By type</button>
+        <button class="opt" data-arrange="material" aria-pressed="false">By material</button>
+        <button class="opt" data-arrange="index" aria-pressed="false">Index</button>
+      </div>
     </div>
   </header>
 
-  <main id="main" tabindex="-1">
-    <!-- Archive: the photographic canvas -->
-    <section class="view" id="view-archive" aria-label="Archive">
-      <div class="canvas" id="canvas"></div>
-    </section>
-
-    <!-- Index: the same photographs as an archival list -->
-    <section class="view" id="view-index" aria-labelledby="index-h" hidden>
-      <h1 class="view-h grid" id="index-h"><span>Index</span><span class="view-count" id="index-count"></span></h1>
-      <div class="table-wrap">
-        <table class="index-table">
-          <thead>
-            <tr><th scope="col">No.</th><th scope="col"><span class="sr">Photograph</span></th><th scope="col">Type</th><th scope="col">Material</th><th scope="col">Location</th><th scope="col">Date</th></tr>
-          </thead>
-          <tbody id="index-body"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- Research: the structure of the publication -->
-    <section class="view" id="view-research" aria-labelledby="research-h" hidden>
-      <h1 class="view-h grid" id="research-h"><span>Research</span></h1>
-      <div id="research-body"></div>
-    </section>
-
-    <!-- About -->
-    <section class="view" id="view-about" aria-labelledby="about-h" hidden>
-      <h1 class="view-h grid" id="about-h"><span>About</span></h1>
-      <div class="about grid">
-        <div class="about-text">
-          <p><em>Imperfect Repairs</em> documents imperfect urban repairs: cracked asphalt, mismatched pavement, patched concrete, repainted road markings, weathered surfaces, and improvised interventions throughout everyday city environments.</p>
-          <p>It looks at these surfaces through two contrasting perspectives: the unexpected visual beauty of repaired and weathered ground, and the structural fragility and neglect that the same imperfections may represent.</p>
-          <p>The project began as a 40-page editorial publication made in Adobe InDesign. This website extends it into a photographic archive.</p>
+  <main class="stage" id="stage" tabindex="-1" aria-label="Archive field">
+    <div class="world" id="world">
+      <div class="sheet" id="sheet" aria-hidden="true">
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <div class="running">
+          <span>Imperfect Repairs</span>
+          <em id="sheet-title">Plates, arranged by type</em>
+          <span id="sheet-count"></span>
         </div>
-        <dl class="colophon">
-          <dt>Project</dt><dd>Imperfect Repairs</dd>
-          <dt>Subtitle</dt><dd>Study of Urban Mending: Beauty &amp; Vulnerability</dd>
-          <dt>By</dt><dd>Jeewon Pahng</dd>
-          <dt>Format</dt><dd>40-page publication; web archive</dd>
-          <dt>Typefaces</dt><dd>Minion Pro, Helvetica Neue</dd>
-        </dl>
       </div>
-    </section>
+    </div>
+
+    <p class="empty" id="empty" hidden>No photographs match. Turn a filter back on above.</p>
+
+    <div class="hud">
+      <span class="count" id="count" aria-live="polite"></span>
+      <span class="hint">Drag to move · Ctrl-scroll or pinch to zoom · Click a photograph to open</span>
+      <div class="zoom">
+        <button id="z-out" aria-label="Zoom out">−</button>
+        <span id="z-level">100%</span>
+        <button id="z-in" aria-label="Zoom in">+</button>
+        <button id="z-reset">Fit</button>
+      </div>
+    </div>
   </main>
 
-  <footer class="foot grid">
-    <span>Imperfect Repairs</span>
-    <span>Jeewon Pahng</span>
-    <span class="foot-count" id="foot-count"></span>
-  </footer>
-
-  <!-- Photo viewer -->
-  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="Photograph" hidden>
-    <div class="viewer-bar">
-      <span id="v-pos"></span>
-      <span class="viewer-nav">
-        <button id="v-prev">Previous</button>
-        <button id="v-next">Next</button>
-        <button id="v-close">Close</button>
-      </span>
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="v-title" hidden>
+    <figure class="v-fig" id="v-fig"></figure>
+    <div class="v-side">
+      <div class="v-bar">
+        <span id="v-pos"></span>
+        <div class="v-nav">
+          <button id="v-prev" aria-label="Previous photograph">←</button>
+          <button id="v-next" aria-label="Next photograph">→</button>
+          <button id="v-close" aria-label="Close">Close</button>
+        </div>
+      </div>
+      <div class="v-body" id="v-body">
+        <span class="v-id reveal" id="v-id"></span>
+        <h2 class="reveal" id="v-title"></h2>
+        <dl class="v-meta reveal" id="v-meta"></dl>
+        <p class="v-note reveal" id="v-note"></p>
+      </div>
     </div>
-    <figure class="viewer-fig">
-      <div class="viewer-img" id="v-img"></div>
-      <figcaption>
-        <dl class="viewer-meta" id="v-meta"></dl>
-        <p class="viewer-note" id="v-note" hidden></p>
-      </figcaption>
-    </figure>
   </div>
 
   <script src="Js/data.js"></script>
