@@ -299,6 +299,19 @@ h1 {
 .gaze-legend { display: flex; justify-content: space-between; gap: 8px; font-size: 9.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .gaze-legend b { font-weight: 400; color: var(--ink); }
 
+/* A passage from the book beside the photograph */
+.v-quote { display: grid; gap: 10px; padding: 16px 0 4px 18px; border-left: 1px solid var(--ink); }
+.v-quote blockquote {
+  font-family: var(--display); font-style: italic;
+  font-size: 1.12rem; line-height: 1.45;
+  text-wrap: pretty;
+}
+.v-quote blockquote::before { content: "“"; }
+.v-quote blockquote::after { content: "”"; }
+.v-quote figcaption { font-size: 9.5px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
+.v-quote cite { font-style: normal; color: var(--ink); }
+.v-quote figcaption span::before { content: "· "; }
+
 /* Text is pressed on left to right, like a strip of tape */
 .reveal { clip-path: inset(0 100% 0 0); }
 .play .reveal { animation: tape .7s var(--ease) forwards; }

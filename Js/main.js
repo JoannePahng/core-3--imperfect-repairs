@@ -470,6 +470,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dd = document.createElement('dd'); dd.textContent = v;
       return [dt, dd];
     }));
+    // a passage from the book that speaks to this photograph
+    const quote = typeof EXCERPTS !== 'undefined' && EXCERPTS[r.excerpt];
+    document.getElementById('v-quote').hidden = !quote;
+    if (quote) {
+      document.getElementById('v-quote-text').textContent = quote.text;
+      document.getElementById('v-quote-theme').textContent = quote.theme;
+    }
     Community.showComments(r.id);
     Community.showPhotoVote(r.id);
 
