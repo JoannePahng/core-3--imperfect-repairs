@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const box = document.getElementById(boxId);
     list.forEach(item => {
       const n = REPAIRS.filter(r => r[key] === item.key).length;
+      if (!n) return;            // e.g. no unsorted photographs right now
       const b = document.createElement('button');
       b.className = 'opt';
       b.setAttribute('aria-pressed', 'true');
