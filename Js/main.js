@@ -1,4 +1,15 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Visitor photographs that have been approved join the archive (CR-01, CR-02 ...)
+  REPAIRS.push(...await Community.approvedPhotos());
+  const srcOf = r => r.src || `image/${r.file}`;
+  // Archive photographs first, then visitor photographs, each in number order
+  const byOrder = (a, b) => (a.r.community ? 1 : 0) - (b.r.community ? 1 : 0) || a.r.id.localeCompare(b.r.id);
+
+  // Title: each letter turns white on a dark patch when touched, then fades back
+  const title = document.getElementById('title');
+  title.innerHTML = '<span aria-hidden="true">' + [...title.textContent]
+    .map(ch => ch === ' ' ? ' ' : `<span class="ch">${ch}</span>`).join('') + '</span>';
+
   const stage = document.getElementById('stage');
   const world = document.getElementById('world');
   const sheet = document.getElementById('sheet');
@@ -7,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const zLevel = document.getElementById('z-level');
   const viewer = document.getElementById('viewer');
 
-  const CAP_H = 34;            // caption line under each photograph
+  const CAP_H = 46;            // caption line under each photograph
   const GAP = 20;              // space between photographs
   const ROW_GAP = GAP + CAP_H;
   const GROUP_W = 960;         // width of one group in the field
@@ -45,8 +56,8 @@ document.addEventListener('DOMContentLoaded', () => {
     el.className = 'node';
     el.setAttribute('aria-label', `${r.id}, ${r.title}`);
     el.innerHTML = `
-      <div class="ph"><img src="image/${r.file}" alt="" decoding="async"></div>
-      <div class="cap"><span class="id">${r.id}</span><span class="t">${r.title}</span></div>`;
+      <div class="ph"><img src="${srcOf(r)}" alt="" decoding="async"></div>
+      <div class="cap"><span class="t">${r.id}</span><span class="id">${materialOf[r.material].label}</span></div>`;
 
     const node = { r, el, ratio: r.w / r.h, x: 0, y: 0, w: 0, h: 0 };
     el.addEventListener('click', () => { if (!moved) open(node); });
@@ -85,6 +96,15 @@ document.addEventListener('DOMContentLoaded', () => {
   buildFilter('f-type', TYPES, 'type');
   buildFilter('f-material', MATERIALS, 'material');
 
+  // View all: every filter back on and the whole sheet in view
+  document.getElementById('view-all').addEventListener('click', () => {
+    state.type = new Set(TYPES.map(t => t.key));
+    state.material = new Set(MATERIALS.map(m => m.key));
+    document.querySelectorAll('#f-type .opt, #f-material .opt').forEach(b => b.setAttribute('aria-pressed', 'true'));
+    if (state.current) close();
+    layout(true);
+  });
+
   document.querySelectorAll('[data-arrange]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('[data-arrange]').forEach(o => o.setAttribute('aria-pressed', o === b));
     state.arrange = b.dataset.arrange;
@@ -119,46 +139,104 @@ document.addEventListener('DOMContentLoaded', () => {
     return y - ROW_GAP;        // bottom edge
   }
 
-  function layout(fit) {
-    world.querySelectorAll('.zone').forEach(z => z.remove());
-    const visible = nodes.filter(n => isOn(n.r)).sort((a, b) => a.r.id.localeCompare(b.r.id));
-    let bw = 0, bh = 0;
-    state.order = [];
+  const contentW = () => stage.clientWidth < 760 ? GROUP_W : 2 * GROUP_W + GROUP_GAP;
+  const sortedAll = () => [...nodes].sort(byOrder);
 
-    if (state.arrange === 'index') {
-      const width = Math.max(320, stage.clientWidth - 2 * (SHEET_X + EDGE));
-      const rowH = stage.clientWidth < 760 ? 150 : 250;
-      bh = justify(visible, width, rowH, 0, 0);
-      bw = width;
-      state.order = visible;
-    } else {
-      const key = state.arrange;
-      const groups = key === 'type' ? TYPES : MATERIALS;
-      const filled = groups
-        .map(g => ({ g, members: visible.filter(n => n.r[key] === g.key) }))
-        .filter(x => x.members.length);
-      // Groups sit in a grid: two across on wide screens, one on phones
-      const cols = stage.clientWidth < 760 ? 1 : Math.min(2, filled.length);
-      let oy = 0, rowBottom = 0;
-      filled.forEach(({ g, members }, i) => {
-        const col = i % cols;
-        if (col === 0 && i > 0) { oy = rowBottom + GROUP_GAP; rowBottom = 0; }
-        const ox = col * (GROUP_W + GROUP_GAP);
-        const bottom = justify(members, GROUP_W, 300, ox, oy + GROUP_TOP);
+  // Work out where each visible photograph goes for one arrangement.
+  // Only sets numbers on the nodes; nothing is drawn here.
+  function placeGroups(arrange, visible, rowH) {
+    const zones = [], order = [];
+    let bh = 0;
+    const groups = arrange === 'type' ? TYPES : MATERIALS;
+    const filled = groups
+      .map(g => ({ g, members: visible.filter(n => n.r[arrange] === g.key) }))
+      .filter(x => x.members.length);
+    // Groups sit in a grid: two across on wide screens, one on phones
+    const cols = stage.clientWidth < 760 ? 1 : 2;
+    let oy = 0, rowBottom = 0;
+    filled.forEach(({ g, members }, i) => {
+      const col = i % cols;
+      if (col === 0 && i > 0) { oy = rowBottom + GROUP_GAP; rowBottom = 0; }
+      const ox = col * (GROUP_W + GROUP_GAP);
+      const bottom = justify(members, GROUP_W, rowH, ox, oy + GROUP_TOP);
+      zones.push({ g, count: members.length, ox, oy });
+      rowBottom = Math.max(rowBottom, bottom);
+      bh = Math.max(bh, bottom);
+      order.push(...members);
+    });
+    return { bh, zones, order };
+  }
 
-        const zone = document.createElement('div');
-        zone.className = 'zone';
-        zone.style.width = `${GROUP_W}px`;
-        zone.style.transform = `translate(${ox}px, ${oy}px)`;
-        zone.innerHTML = `<span class="name">${g.label}</span><span class="num">${pad2(members.length)} plates</span>`;
-        sheet.after(zone);
-
-        rowBottom = Math.max(rowBottom, bottom);
-        bh = Math.max(bh, bottom);
-        bw = Math.max(bw, ox + GROUP_W);
-        state.order.push(...members);
-      });
+  function place(arrange, visible) {
+    const { bw, bh, indexRowH } = sheetSize();
+    if (arrange === 'index') {
+      justify(visible, bw, indexRowH, 0, 0);
+      return { zones: [], order: visible };
     }
+    // Grouped views use the largest photographs that still fit inside the sheet
+    let rowH = 420, result = placeGroups(arrange, visible, rowH);
+    while (result.bh > bh && rowH > 40) {
+      rowH *= 0.94;
+      result = placeGroups(arrange, visible, rowH);
+    }
+    return result;
+  }
+
+  // The sheet takes the size of the Index view of every photograph, with the
+  // row height chosen so the sheet has the same shape as the screen and fills
+  // it. Every other view and filter then works inside that one fixed sheet.
+  let sheetFor = null;
+  function sheetSize() {
+    const W = stage.clientWidth, H = stage.clientHeight;
+    const key = `${W}x${H}`;
+    if (sheetFor && sheetFor.key === key) return sheetFor;
+    const bw = contentW();
+    const target = H / W;
+    const all = sortedAll();
+    let best = null;
+    for (let rowH = 100; rowH <= 520; rowH += 10) {
+      const bh = justify(all, bw, rowH, 0, 0);
+      const ratio = (bh + SHEET_TOP + SHEET_BOTTOM + 2 * EDGE) / (bw + 2 * SHEET_X + 2 * EDGE);
+      const miss = Math.abs(ratio - target);
+      if (!best || miss < best.miss) best = { miss, rowH, bh };
+    }
+    sheetFor = { key, bw, bh: best.bh, indexRowH: best.rowH };
+    return sheetFor;
+  }
+
+  function layout(fit) {
+    // Map view: the same filtered photographs, pinned on Manhattan
+    const onMap = state.arrange === 'map';
+    stage.hidden = onMap;
+    if (onMap) {
+      const shown = nodes.filter(n => isOn(n.r)).sort(byOrder);
+      state.order = shown;
+      if (state.current && !isOn(state.current.r)) close();
+      MapView.show(shown.map(n => n.r), srcOf, id => {
+        const node = nodes.find(n => n.r.id === id);
+        if (node) open(node);
+      }).then(pinned => {
+        if (pinned === undefined) return;
+        document.getElementById('map-count').textContent = `${pad2(pinned)} of ${pad2(shown.length)} located`;
+      });
+      return;
+    }
+    MapView.hide();
+
+    world.querySelectorAll('.zone').forEach(z => z.remove());
+    const { bw, bh } = sheetSize();
+    const visible = nodes.filter(n => isOn(n.r)).sort(byOrder);
+    const result = place(state.arrange, visible);
+    state.order = result.order;
+
+    result.zones.forEach(({ g, count, ox, oy }) => {
+      const zone = document.createElement('div');
+      zone.className = 'zone';
+      zone.style.width = `${GROUP_W}px`;
+      zone.style.transform = `translate(${ox}px, ${oy}px)`;
+      zone.innerHTML = `<span class="name">${g.label}</span><span class="num">${pad2(count)}</span>`;
+      sheet.after(zone);
+    });
 
     let i = 0;
     nodes.forEach(n => {
@@ -166,14 +244,13 @@ document.addEventListener('DOMContentLoaded', () => {
       n.el.classList.toggle('off', !on);
       n.el.tabIndex = on ? 0 : -1;
       if (!on) return;
-      n.el.style.transitionDelay = `${Math.min(i++ * 18, 300)}ms`;
+      n.el.style.transitionDelay = `${Math.min(i++ * 14, 300)}ms`;
       n.el.style.width = `${n.w}px`;
       n.el.querySelector('.ph').style.height = `${n.h}px`;
       n.el.style.transform = `translate(${n.x}px, ${n.y}px)`;
     });
 
-    // The sheet wraps whatever is on it; its edge is the wall
-    if (!visible.length) { bw = GROUP_W; bh = 300; }
+    // Fixed sheet; its edge is the wall
     const sw = bw + 2 * SHEET_X, sh = bh + SHEET_TOP + SHEET_BOTTOM;
     sheet.style.width = `${sw}px`;
     sheet.style.height = `${sh}px`;
@@ -229,17 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function fitTo(glide) {
     const W = stage.clientWidth, H = stage.clientHeight;
     const bw = bounds.x1 - bounds.x0, bh = bounds.y1 - bounds.y0;
-    if (state.arrange === 'index') {
-      cam.k = Math.min(1, W / bw);
-      minK = cam.k;
-      cam.x = (W - bw * cam.k) / 2 - bounds.x0 * cam.k;
-      cam.y = -bounds.y0 * cam.k;
-    } else {
-      cam.k = Math.min(1, W / bw, H / bh);
-      minK = cam.k;
-      cam.x = (W - bw * cam.k) / 2 - bounds.x0 * cam.k;
-      cam.y = (H - bh * cam.k) / 2 - bounds.y0 * cam.k;
-    }
+    // the whole sheet, as large as the screen allows
+    cam.k = Math.min(W / bw, H / bh);
+    minK = cam.k;
+    cam.x = (W - bw * cam.k) / 2 - bounds.x0 * cam.k;
+    cam.y = (H - bh * cam.k) / 2 - bounds.y0 * cam.k;
     hardClamp();
     applyCam(glide ? 'glide' : null);
   }
@@ -337,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pos = state.order.indexOf(node) + 1;
 
     const img = new Image();
-    img.src = `image/${r.file}`;
+    img.src = srcOf(r);
     img.alt = r.title;
     document.getElementById('v-fig').replaceChildren(img);
 
@@ -350,9 +421,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ['Material', materialOf[r.material].label],
       ['Location', r.place],
       ['Date', r.date],
+      ['Found by', r.by],
       ['Format', `${r.w} × ${r.h} px`]
     ].filter(([, v]) => v);
-    document.getElementById('v-meta').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    // textContent, never innerHTML: visitor photographs carry visitor text
+    document.getElementById('v-meta').replaceChildren(...rows.flatMap(([k, v]) => {
+      const dt = document.createElement('dt'); dt.textContent = k;
+      const dd = document.createElement('dd'); dd.textContent = v;
+      return [dt, dd];
+    }));
+    Community.showComments(r.id);
 
     const note = document.getElementById('v-note');
     note.textContent = r.note;
@@ -384,13 +462,17 @@ document.addEventListener('DOMContentLoaded', () => {
   viewer.addEventListener('click', e => { if (e.target.id === 'v-fig') close(); });
 
   document.addEventListener('keydown', e => {
+    // typing in a form never moves the archive
+    const typing = e.target.closest && e.target.closest('input, textarea, select');
+    if (typing && e.key !== 'Escape') return;
+    if (!document.getElementById('drawer').hidden) return;
     if (state.current) {
       if (e.key === 'Escape') close();
       else if (e.key === 'ArrowRight') step(1);
       else if (e.key === 'ArrowLeft') step(-1);
       return;
     }
-    if (e.metaKey || e.ctrlKey) return;
+    if (e.metaKey || e.ctrlKey || state.arrange === 'map') return;
     if (e.key === '+' || e.key === '=') zoomAt(...center(), 1.3, true);
     else if (e.key === '-') zoomAt(...center(), 1 / 1.3, true);
     else if (e.key === '0') layout(true);

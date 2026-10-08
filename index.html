@@ -6,9 +6,7 @@
   <title>Imperfect Repairs — Archive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400&family=Schibsted+Grotesk:ital,wght@0,400;0,500;1,400&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Schibsted+Grotesk:ital,wght@0,400;0,500;1,400&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,8 +14,13 @@
 
   <header class="top">
     <div class="top-row">
-      <h1>Imperfect Repairs</h1>
+      <h1 id="title" aria-label="Imperfect Repairs">Imperfect Repairs</h1>
       <span class="crumb">Photographic archive of urban repairs</span>
+      <nav class="community-nav" aria-label="Community">
+        <button data-open="contribute">Contribute</button>
+        <button data-open="discussion">Discussion</button>
+        <button data-open="poll">Poll <span class="poll-mini" id="poll-mini"></span></button>
+      </nav>
     </div>
 
     <div class="toolbar">
@@ -32,7 +35,9 @@
         <button class="opt" data-arrange="type" aria-pressed="true">By type</button>
         <button class="opt" data-arrange="material" aria-pressed="false">By material</button>
         <button class="opt" data-arrange="index" aria-pressed="false">Index</button>
+        <button class="opt" data-arrange="map" aria-pressed="false">Map</button>
       </div>
+      <button class="view-all" id="view-all">View all</button>
     </div>
   </header>
 
@@ -62,6 +67,45 @@
     </div>
   </main>
 
+  <!-- Map of Manhattan -->
+  <section class="mapview" id="mapview" aria-label="Map of photograph locations" hidden>
+    <aside class="map-index">
+      <div class="map-title">
+        <h2>Manhattan</h2>
+        <span>40.7831° N · 73.9712° W</span>
+      </div>
+      <p class="map-dek">Where the repairs were found. Choose a plate to go there; open its pin to see the photograph.</p>
+      <span class="map-count" id="map-count"></span>
+      <ol class="map-list" id="map-list"></ol>
+    </aside>
+    <div class="map-frame">
+      <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+      <div class="map" id="map"></div>
+      <article class="map-card" id="map-card" aria-live="polite" hidden>
+        <button class="map-card-close" id="map-card-close" aria-label="Close preview">×</button>
+        <button class="map-card-img" id="map-card-img" aria-label="Open photograph"></button>
+        <div class="map-card-body">
+          <span class="map-card-id" id="map-card-id"></span>
+          <h3 id="map-card-title"></h3>
+          <span class="map-card-meta" id="map-card-meta"></span>
+          <div class="map-card-foot">
+            <span class="map-card-nav">
+              <button id="map-card-prev" aria-label="Previous location">←</button>
+              <button id="map-card-next" aria-label="Next location">→</button>
+            </span>
+            <button class="map-card-open" id="map-card-open">Open plate</button>
+          </div>
+        </div>
+      </article>
+      <p class="map-note" id="map-note" hidden></p>
+      <div class="map-place" id="map-place" hidden>
+        <span>Placing mode · click the map where a photograph was taken, then paste into Js/data.js</span>
+        <code>—</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- Photo viewer -->
   <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="v-title" hidden>
     <figure class="v-fig" id="v-fig"></figure>
     <div class="v-side">
@@ -79,11 +123,151 @@
         <dl class="v-meta reveal" id="v-meta"></dl>
         <p class="v-note reveal" id="v-note"></p>
       </div>
+      <section class="comments" aria-labelledby="c-h">
+        <h3 class="section-h" id="c-h">Comments <span id="c-count"></span></h3>
+        <ol class="entries" id="c-list"></ol>
+        <form class="entry-form" id="c-form" novalidate>
+          <label class="field">
+            <span>Name <i>optional</i></span>
+            <input id="c-name" name="name" maxlength="40" autocomplete="nickname">
+          </label>
+          <label class="field">
+            <span>Comment</span>
+            <textarea id="c-body" name="body" rows="3" maxlength="500" required></textarea>
+          </label>
+          <input class="trap" id="c-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="form-foot">
+            <span class="form-msg" id="c-msg" role="status"></span>
+            <button class="btn" type="submit">Post comment</button>
+          </div>
+        </form>
+      </section>
     </div>
   </div>
 
+  <!-- Community drawer: contribute, discussion, poll -->
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Community" hidden>
+    <div class="drawer-bar">
+      <div class="tabs" role="tablist">
+        <button role="tab" id="tab-contribute" data-tab="contribute" aria-selected="true">Contribute</button>
+        <button role="tab" id="tab-discussion" data-tab="discussion" aria-selected="false">Discussion</button>
+        <button role="tab" id="tab-poll" data-tab="poll" aria-selected="false">Poll</button>
+      </div>
+      <button class="drawer-close" id="drawer-close">Close</button>
+    </div>
+
+    <p class="offline" id="offline" hidden>Community features are not connected yet. Uploads, comments and votes will open once the archive's database is set up.</p>
+
+    <!-- Contribute -->
+    <section class="panel" id="panel-contribute" role="tabpanel" aria-labelledby="tab-contribute">
+      <h2 class="panel-h">Add a repair you found</h2>
+      <p class="panel-dek">Photograph a crack, patch, painted line or exposed seam in your city and add it to the archive. Each photograph is reviewed before it appears.</p>
+      <form class="entry-form" id="u-form" novalidate>
+        <label class="drop" id="u-drop">
+          <input type="file" id="u-file" accept="image/*" required>
+          <span class="drop-text" id="u-drop-text">Choose a photograph<br><i>or drop it here · JPG or PNG · up to 15 MB</i></span>
+          <img id="u-preview" alt="" hidden>
+        </label>
+        <div class="field-row">
+          <label class="field">
+            <span>Type</span>
+            <select id="u-type" required></select>
+          </label>
+          <label class="field">
+            <span>Material</span>
+            <select id="u-material" required></select>
+          </label>
+        </div>
+        <div class="field-row">
+          <label class="field">
+            <span>Location <i>city or area</i></span>
+            <input id="u-place" maxlength="60" placeholder="Seoul, Mapo-gu">
+          </label>
+          <label class="field">
+            <span>Date found</span>
+            <input id="u-date" type="month">
+          </label>
+        </div>
+        <div class="field">
+          <span>Pin it on the map <i id="u-map-note">Optional. Click where you found it.</i></span>
+          <div class="u-map" id="u-map"></div>
+        </div>
+        <label class="field">
+          <span>What did you notice? <i>optional</i></span>
+          <textarea id="u-caption" rows="3" maxlength="280"></textarea>
+        </label>
+        <label class="field">
+          <span>Your name <i>optional, shown with the photograph</i></span>
+          <input id="u-name" maxlength="40" autocomplete="nickname">
+        </label>
+        <label class="check">
+          <input type="checkbox" id="u-consent" required>
+          <span>I took this photograph and agree to it being shown in the Imperfect Repairs archive.</span>
+        </label>
+        <input class="trap" id="u-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="form-foot">
+          <span class="form-msg" id="u-msg" role="status"></span>
+          <button class="btn" type="submit" id="u-submit">Submit photograph</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Discussion -->
+    <section class="panel" id="panel-discussion" role="tabpanel" aria-labelledby="tab-discussion" hidden>
+      <h2 class="panel-h">Discussion</h2>
+      <p class="panel-dek">How do you read the repairs around you? Care, neglect, accident, design? Share a thought.</p>
+      <form class="entry-form" id="d-form" novalidate>
+        <label class="field">
+          <span>Name <i>optional</i></span>
+          <input id="d-name" maxlength="40" autocomplete="nickname">
+        </label>
+        <label class="field">
+          <span>Your thoughts</span>
+          <textarea id="d-body" rows="4" maxlength="800" required></textarea>
+        </label>
+        <input class="trap" id="d-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="form-foot">
+          <span class="form-msg" id="d-msg" role="status"></span>
+          <button class="btn" type="submit">Share</button>
+        </div>
+      </form>
+      <ol class="entries entries-wide" id="d-list"></ol>
+    </section>
+
+    <!-- Poll -->
+    <section class="panel" id="panel-poll" role="tabpanel" aria-labelledby="tab-poll" hidden>
+      <h2 class="panel-h">Beauty or vulnerability?</h2>
+      <p class="panel-dek">When you see a city's imperfect repairs, what do they say to you first?</p>
+      <div class="poll-choices" id="p-choices">
+        <button class="choice" data-choice="beauty">
+          <b>Beauty</b>
+          <span>Accidental art, care, the trace of a hand</span>
+        </button>
+        <button class="choice" data-choice="vulnerability">
+          <b>Vulnerability</b>
+          <span>Fragility, neglect, a city wearing thin</span>
+        </button>
+      </div>
+      <div class="poll-result" id="p-result">
+        <div class="poll-bar" aria-hidden="true">
+          <span class="poll-b" id="p-bar-b"></span>
+          <span class="poll-v" id="p-bar-v"></span>
+        </div>
+        <div class="poll-legend">
+          <span><b id="p-pct-b">—</b> Beauty</span>
+          <span id="p-total"></span>
+          <span>Vulnerability <b id="p-pct-v">—</b></span>
+        </div>
+        <p class="form-msg" id="p-msg" role="status"></p>
+      </div>
+    </section>
+  </aside>
+
+  <script src="Js/config.js"></script>
   <script src="Js/images.js"></script>
   <script src="Js/data.js"></script>
+  <script src="Js/map.js"></script>
+  <script src="Js/community.js"></script>
   <script src="Js/main.js"></script>
 </body>
 </html>
