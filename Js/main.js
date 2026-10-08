@@ -402,6 +402,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   stage.addEventListener('pointercancel', release);
 
   /* ---------- Viewer ---------- */
+  // Loupe: a round magnifier that follows the pointer over the photograph,
+  // for reading the texture of a surface the way you would with a print
+  const ZOOM = 3;
+  const LENS = 190;
+  const lens = document.createElement('div');
+  lens.className = 'loupe';
+  lens.setAttribute('aria-hidden', 'true');
+  const lensHint = document.createElement('p');
+  lensHint.className = 'loupe-hint';
+  lensHint.textContent = matchMedia('(hover: hover)').matches
+    ? 'Move over the photograph to look closer · ×3'
+    : 'Press and drag on the photograph to look closer · ×3';
+
+  function attachLoupe(img) {
+    const fig = img.parentElement;
+    lens.hidden = true;
+    lens.style.backgroundImage = `url("${img.src.replace(/"/g, '%22')}")`;
+
+    const move = e => {
+      const box = img.getBoundingClientRect();
+      const x = e.clientX - box.left, y = e.clientY - box.top;
+      if (x < 0 || y < 0 || x > box.width || y > box.height) { lens.hidden = true; return; }
+      const figBox = fig.getBoundingClientRect();
+      lens.hidden = false;
+      lens.style.width = lens.style.height = `${LENS}px`;
+      lens.style.left = `${e.clientX - figBox.left - LENS / 2}px`;
+      lens.style.top = `${e.clientY - figBox.top - LENS / 2}px`;
+      lens.style.backgroundSize = `${box.width * ZOOM}px ${box.height * ZOOM}px`;
+      lens.style.backgroundPosition = `${-(x * ZOOM - LENS / 2)}px ${-(y * ZOOM - LENS / 2)}px`;
+    };
+    const hide = () => { lens.hidden = true; };
+
+    img.addEventListener('pointermove', move);
+    img.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') { img.setPointerCapture(e.pointerId); move(e); } });
+    img.addEventListener('pointerleave', hide);
+    img.addEventListener('pointerup', e => { if (e.pointerType !== 'mouse') hide(); });
+    img.addEventListener('pointercancel', hide);
+  }
+
   function open(node) {
     state.current = node;
     const r = node.r;
@@ -410,7 +449,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const img = new Image();
     img.src = srcOf(r);
     img.alt = r.title;
-    document.getElementById('v-fig').replaceChildren(img);
+    document.getElementById('v-fig').replaceChildren(img, lens, lensHint);
+    attachLoupe(img);
 
     document.getElementById('v-pos').textContent = `Plate ${pad2(pos)} of ${pad2(state.order.length)}`;
     document.getElementById('v-id').textContent = r.id;
@@ -431,6 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return [dt, dd];
     }));
     Community.showComments(r.id);
+    Community.showPhotoVote(r.id);
 
     const note = document.getElementById('v-note');
     note.textContent = r.note;

@@ -252,6 +252,53 @@ h1 {
 .v-meta dt { color: var(--muted); padding-right: 28px; font-size: 9.5px; }
 .v-note { font-size: 14px; line-height: 1.6; max-width: 60ch; }
 
+/* Loupe over the photograph in the viewer */
+.v-fig { position: relative; }
+.v-fig img { cursor: crosshair; touch-action: none; }
+.loupe {
+  position: absolute; z-index: 2;
+  border-radius: 50%;
+  background-color: var(--paper);
+  background-repeat: no-repeat;
+  border: 1px solid var(--ink);
+  box-shadow: 0 0 0 5px rgba(252, 251, 247, .9), 0 0 0 6px var(--rule-strong), 0 18px 40px -14px rgba(30, 26, 20, .55);
+  filter: var(--tone-focus);
+  pointer-events: none;
+}
+.loupe::after {   /* a fine crosshair at the centre, like a magnifier's reticle */
+  content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(var(--paper), var(--paper)) center / 1px 100% no-repeat,
+              linear-gradient(var(--paper), var(--paper)) center / 100% 1px no-repeat;
+  opacity: .8; mix-blend-mode: difference;
+}
+.loupe-hint {
+  position: absolute; left: 0; right: 0; bottom: clamp(8px, 2vw, 24px);
+  text-align: center; pointer-events: none;
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: .14em; color: var(--muted);
+}
+
+/* Per-photograph vote */
+.gaze { padding: 4px 22px 24px; display: grid; gap: 10px; }
+.gaze-q { font-family: var(--display); font-size: 1.2rem; line-height: 1.2; }
+.gaze-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.gaze-btn {
+  padding: 11px 10px;
+  border: 1px solid var(--rule-strong);
+  font-family: var(--display); font-size: 1.05rem;
+  transition: border-color .2s, background-color .2s, color .2s;
+}
+.gaze-btn:hover:not(:disabled) { border-color: var(--ink); }
+.gaze-btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); opacity: 1; }
+.gaze-btn:disabled:not([aria-pressed="true"]) { opacity: .45; }
+.gaze-result { display: grid; gap: 8px; }
+.gaze-bar { display: flex; height: 10px; border: 1px solid var(--ink); overflow: hidden; }
+.gaze-b, .gaze-v { display: block; height: 100%; transition: width .9s var(--ease); }
+.gaze-b { background: var(--paper); }
+.gaze-v { background: var(--ink); }
+.gaze-legend { display: flex; justify-content: space-between; gap: 8px; font-size: 9.5px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.gaze-legend b { font-weight: 400; color: var(--ink); }
+
 /* Text is pressed on left to right, like a strip of tape */
 .reveal { clip-path: inset(0 100% 0 0); }
 .play .reveal { animation: tape .7s var(--ease) forwards; }

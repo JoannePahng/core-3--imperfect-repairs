@@ -6,6 +6,7 @@
 --   comments     read and add comments on a photograph
 --   opinions     read and add posts in the discussion
 --   votes        cast one vote per browser; read the totals
+--   photo_votes  one Beauty / Vulnerability vote per photograph per browser; read the totals
 -- Approving or deleting anything is done in the Supabase dashboard (Table Editor).
 
 -- ---------- Tables ----------
@@ -50,6 +51,18 @@ create table if not exists public.votes (
 alter table public.submissions add column if not exists lat double precision check (lat between -90 and 90);
 alter table public.submissions add column if not exists lng double precision check (lng between -180 and 180);
 
+-- One vote per browser per photograph: is this repair beauty or vulnerability?
+create table if not exists public.photo_votes (
+  photo_id    text not null check (char_length(photo_id) <= 20),
+  client_id   text not null check (char_length(client_id) between 8 and 64),
+  choice      text not null check (choice in ('beauty', 'vulnerability')),
+  created_at  timestamptz not null default now(),
+  primary key (photo_id, client_id)
+);
+
+create or replace view public.photo_vote_totals as
+  select photo_id, choice, count(*)::int as total from public.photo_votes group by photo_id, choice;
+
 -- Totals only, so individual votes stay private
 create or replace view public.vote_totals as
   select choice, count(*)::int as total from public.votes group by choice;
@@ -59,6 +72,7 @@ alter table public.submissions enable row level security;
 alter table public.comments    enable row level security;
 alter table public.opinions    enable row level security;
 alter table public.votes       enable row level security;
+alter table public.photo_votes enable row level security;
 
 drop policy if exists "read approved"   on public.submissions;
 drop policy if exists "submit pending"  on public.submissions;
@@ -78,7 +92,11 @@ create policy "add opinion"   on public.opinions for insert to anon with check (
 drop policy if exists "cast vote" on public.votes;
 create policy "cast vote" on public.votes for insert to anon with check (true);
 
+drop policy if exists "cast photo vote" on public.photo_votes;
+create policy "cast photo vote" on public.photo_votes for insert to anon with check (true);
+
 grant select on public.vote_totals to anon;
+grant select on public.photo_vote_totals to anon;
 
 -- ---------- Photo storage ----------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

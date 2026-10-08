@@ -313,6 +313,60 @@ const Community = (() => {
     }
   });
 
+  /* ---------- Per-photograph vote: beauty or vulnerability ---------- */
+  const gazeBtns = [...document.querySelectorAll('.gaze-btn')];
+  let gazeFor = null;
+  const gazeKey = id => `ir-pv-${id}`;
+
+  function drawGaze(totals) {
+    const b = totals.beauty || 0, v = totals.vulnerability || 0, all = b + v;
+    const pb = all ? Math.round((b / all) * 100) : 50, pv = 100 - pb;
+    $('g-bar-b').style.width = `${pb}%`;
+    $('g-bar-v').style.width = `${pv}%`;
+    $('g-pct-b').textContent = `${pb}%`;
+    $('g-pct-v').textContent = `${pv}%`;
+    $('g-total').textContent = `${all} vote${all === 1 ? '' : 's'}`;
+    $('g-result').hidden = false;
+  }
+
+  // Results stay hidden until this browser has voted, so no one is nudged
+  async function showPhotoVote(photoId) {
+    gazeFor = photoId;
+    const mine = store.get(gazeKey(photoId));
+    gazeBtns.forEach(b => {
+      b.setAttribute('aria-pressed', b.dataset.choice === mine);
+      b.disabled = !enabled || Boolean(mine);
+    });
+    $('g-result').hidden = true;
+    if (!enabled) { $('g-msg').textContent = 'Votes open once the database is connected.'; return; }
+    if (!mine) { $('g-msg').textContent = 'Vote to see how others read it.'; return; }
+    $('g-msg').textContent = `You read it as ${mine === 'beauty' ? 'beauty' : 'vulnerability'}.`;
+    try {
+      const rows = await select('photo_vote_totals', `select=choice,total&photo_id=eq.${encodeURIComponent(photoId)}`);
+      if (gazeFor !== photoId) return;
+      drawGaze(Object.fromEntries(rows.map(r => [r.choice, r.total])));
+    } catch (err) {
+      $('g-msg').textContent = 'Results could not be loaded.';
+    }
+  }
+
+  gazeBtns.forEach(btn => btn.addEventListener('click', async () => {
+    const id = gazeFor;
+    if (!id || store.get(gazeKey(id))) return;
+    gazeBtns.forEach(b => { b.disabled = true; });
+    try {
+      await insert('photo_votes', { photo_id: id, client_id: clientId, choice: btn.dataset.choice });
+    } catch (err) {
+      if (err.status !== 409) {     // 409: already voted from this browser
+        $('g-msg').textContent = `${err.message}. Please try again.`;
+        gazeBtns.forEach(b => { b.disabled = false; });
+        return;
+      }
+    }
+    store.set(gazeKey(id), btn.dataset.choice);
+    showPhotoVote(id);
+  }));
+
   /* ---------- Poll ---------- */
   const choices = [...document.querySelectorAll('.choice')];
 
@@ -369,5 +423,5 @@ const Community = (() => {
   // Show the current split in the header right away
   loadPoll();
 
-  return { enabled, approvedPhotos, showComments };
+  return { enabled, approvedPhotos, showComments, showPhotoVote };
 })();

@@ -123,6 +123,23 @@
         <dl class="v-meta reveal" id="v-meta"></dl>
         <p class="v-note reveal" id="v-note"></p>
       </div>
+      <section class="gaze" aria-labelledby="g-h">
+        <h3 class="section-h" id="g-h">Beautiful, or vulnerable?</h3>
+        <p class="gaze-q">How do you read this repair?</p>
+        <div class="gaze-choices">
+          <button class="gaze-btn" data-choice="beauty" aria-pressed="false">Beauty</button>
+          <button class="gaze-btn" data-choice="vulnerability" aria-pressed="false">Vulnerability</button>
+        </div>
+        <div class="gaze-result" id="g-result" hidden>
+          <div class="gaze-bar" aria-hidden="true"><span class="gaze-b" id="g-bar-b"></span><span class="gaze-v" id="g-bar-v"></span></div>
+          <div class="gaze-legend">
+            <span><b id="g-pct-b"></b> Beauty</span>
+            <span id="g-total"></span>
+            <span>Vulnerability <b id="g-pct-v"></b></span>
+          </div>
+        </div>
+        <p class="form-msg" id="g-msg" role="status">Vote to see how others read it.</p>
+      </section>
       <section class="comments" aria-labelledby="c-h">
         <h3 class="section-h" id="c-h">Comments <span id="c-count"></span></h3>
         <ol class="entries" id="c-list"></ol>
