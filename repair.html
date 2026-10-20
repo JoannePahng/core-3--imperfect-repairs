@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Repair Imperfectly — Imperfect Repairs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Schibsted+Grotesk:ital,wght@0,400;0,500;1,400&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-repair">
+  <a class="skip" href="#bench">Skip to the workbench</a>
+
+  <header class="top">
+    <div class="top-row">
+      <h1><a href="index.html" class="title-link">Imperfect Repairs</a></h1>
+      <span class="crumb">Repair imperfectly</span>
+      <nav class="community-nav" aria-label="Pages">
+        <a href="index.html">Archive</a>
+        <a href="repair.html" aria-current="page">Repair imperfectly</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="workshop">
+    <!-- Damage still waiting for a repair -->
+    <aside class="awaiting" aria-labelledby="awaiting-h">
+      <div class="awaiting-head">
+        <h2 id="awaiting-h">Awaiting repair</h2>
+        <span id="awaiting-count"></span>
+      </div>
+      <p class="awaiting-dek">Cracks and breaches no one has mended yet. Choose one and fix it, not perfectly.</p>
+      <ol class="awaiting-list" id="awaiting-list"></ol>
+
+      <div class="mine" id="mine" hidden>
+        <h3>Your repairs</h3>
+        <ol class="mine-list" id="mine-list"></ol>
+      </div>
+    </aside>
+
+    <!-- The photograph on the bench -->
+    <section class="bench" id="bench" aria-labelledby="bench-title">
+      <div class="bench-head">
+        <span class="bench-id" id="bench-id"></span>
+        <h2 id="bench-title">Repair imperfectly</h2>
+        <span class="bench-count" id="bench-count" aria-live="polite"></span>
+      </div>
+      <div class="bench-frame" id="bench-frame">
+        <canvas id="canvas" aria-label="Photograph to repair. Use the tools to lay tape, pour asphalt, set a patch or stitch a crack."></canvas>
+        <p class="bench-msg" id="bench-msg" hidden></p>
+      </div>
+      <p class="bench-caption" id="bench-caption"></p>
+    </section>
+
+    <!-- Tools -->
+    <aside class="tools" aria-labelledby="tools-h">
+      <h2 class="tools-h" id="tools-h">Tools</h2>
+      <div class="tool-list" role="radiogroup" aria-label="Repair tool">
+        <span class="tool-group">Mend</span>
+        <button class="tool" role="radio" data-tool="tape" aria-checked="true">
+          <i class="tool-mark tool-tape" aria-hidden="true"></i>
+          <span><b>Tape</b><em>Drag across a crack to lay a strip</em></span>
+        </button>
+        <button class="tool" role="radio" data-tool="asphalt" aria-checked="false">
+          <i class="tool-mark tool-asphalt" aria-hidden="true"></i>
+          <span><b>Asphalt</b><em>Press and hold to pour; move slowly to spread it</em></span>
+        </button>
+        <button class="tool" role="radio" data-tool="patch" aria-checked="false">
+          <i class="tool-mark tool-patch" aria-hidden="true"></i>
+          <span><b>Patch</b><em>Drag a box to set a patch</em></span>
+        </button>
+        <button class="tool" role="radio" data-tool="stitch" aria-checked="false">
+          <i class="tool-mark tool-stitch" aria-hidden="true"></i>
+          <span><b>Stitch</b><em>Drag along a crack to staple it shut</em></span>
+        </button>
+        <button class="tool" role="radio" data-tool="gold" aria-checked="false">
+          <i class="tool-mark tool-gold" aria-hidden="true"></i>
+          <span><b>Gold</b><em>Trace a crack in gold, as in kintsugi</em></span>
+        </button>
+
+        <span class="tool-group">Grow</span>
+        <button class="tool" role="radio" data-tool="moss" aria-checked="false">
+          <i class="tool-mark tool-moss" aria-hidden="true"></i>
+          <span><b>Moss</b><em>Rub along a crack to let moss settle in</em></span>
+        </button>
+        <button class="tool" role="radio" data-tool="weeds" aria-checked="false">
+          <i class="tool-mark tool-weeds" aria-hidden="true"></i>
+          <span><b>Weeds</b><em>Click to plant; each one grows its own way</em></span>
+        </button>
+
+        <span class="tool-group">Mark</span>
+        <button class="tool" role="radio" data-tool="sticker" aria-checked="false">
+          <i class="tool-mark tool-sticker" aria-hidden="true"></i>
+          <span><b>Sticker</b><em>Choose a gem, then click to stick it on</em></span>
+        </button>
+        <div class="stickers" id="stickers" role="radiogroup" aria-label="Sticker" hidden></div>
+      </div>
+      <p class="tools-note">No tool is quite steady. Every repair comes out a little off.</p>
+      <div class="tool-actions">
+        <button class="plain" id="undo">Undo</button>
+        <button class="plain" id="clear">Start over</button>
+      </div>
+      <button class="btn btn-wide" id="finish">Finish repair</button>
+
+      <div class="finished" id="finished" hidden>
+        <p class="finished-h">Repaired imperfectly.</p>
+        <p class="finished-meta" id="finished-meta"></p>
+        <button class="btn btn-wide" id="download">Save image</button>
+        <button class="plain" id="again">Keep working</button>
+      </div>
+    </aside>
+  </main>
+
+  <script src="Js/images.js"></script>
+  <script src="Js/data.js"></script>
+  <script src="Js/repair.js"></script>
+</body>
+</html>
